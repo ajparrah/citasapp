@@ -10,14 +10,15 @@ import {
   ScrollView,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import {Colors} from '../common/UIStylesCommon';
+import {Colors} from '../../common/UIStylesCommon';
 import {
   getDateFormatted,
   getTimeFormatted,
-} from '../common/helpers/dateFormatted';
-import validator from 'validator';
+} from '../../common/helpers/dateFormatted';
+import {isFormValid as isDateValid} from './Logic/validateForm';
 import 'react-native-get-random-values';
 import {nanoid} from 'nanoid';
+
 const initialValues = {
   pacient: '',
   owner: '',
@@ -26,12 +27,15 @@ const initialValues = {
   symptoms: '',
 };
 
-export const Form = ({CurrentDates, AddDate}) => {
+export const Form = ({AddDate}) => {
+  //#region states
   const [formValues, setFormValue] = useState(initialValues);
-  const {pacient, owner, phoneNumber, date, symptoms} = formValues;
+  const {date} = formValues;
   const [mode, setMode] = useState('date');
   const [show, setShow] = useState(false);
+  //#endregion states
 
+  //#region handlers
   const handleChangeDateTimePicker = (event, selectedDate) => {
     const currentDate = selectedDate || date;
     setShow(Platform.OS === 'ios');
@@ -55,49 +59,20 @@ export const Form = ({CurrentDates, AddDate}) => {
   };
 
   const handleAdd = () => {
-    const {result: areFormValuesValid, error} = isFormValid();
-    if (areFormValuesValid && validator.isEmpty(error)) {
+    const {result: areFormValuesValid, error} = isDateValid(formValues);
+    const errorIsEmpty = error.trim().length <= 0;
+    if (areFormValuesValid && errorIsEmpty) {
       const newDate = {
         ...formValues,
         id: nanoid(10),
       };
-      AddDate([...CurrentDates, newDate]);
+      AddDate(newDate);
       setFormValue(initialValues);
     } else {
       Alert.alert('Agregar nueva cita', error, [{text: 'Aceptar'}]);
     }
   };
-
-  const isFormValid = () => {
-    let result = true;
-    let error = '';
-    const valuesToValidate = [
-      validator.isEmpty(pacient),
-      validator.isEmpty(owner),
-      validator.isEmpty(phoneNumber),
-      validator.isEmpty(date.toISOString()),
-      validator.isEmpty(symptoms),
-    ];
-    const inputNameToValidate = [
-      'nombre del paciente',
-      'nombre del propietario',
-      'teléfono de contacto',
-      'fecha y hora',
-      'sintomas',
-    ];
-    const indexValueOnArray = valuesToValidate.indexOf(true);
-    if (indexValueOnArray !== -1) {
-      error = `El campo ${inputNameToValidate[indexValueOnArray]} es obligatorio`;
-      result = false;
-    } else if (validator.isDate(date.toISOString())) {
-      error = 'Debe ingresar una fecha valida';
-      if (validator.isBefore(date.toISOString())) {
-        error = 'La fecha debe ser mayor a la fecha actual';
-      }
-      result = false;
-    }
-    return {result, error};
-  };
+  //#endregion handlers
 
   return (
     <ScrollView>
@@ -267,5 +242,10 @@ const styles = StyleSheet.create({
     fontSize: 25,
     fontWeight: 'bold',
     marginBottom: 2,
+  },
+  calendar: {
+    width: 15,
+    height: 15,
+    //backgroundColor: 'blue',
   },
 });

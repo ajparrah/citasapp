@@ -1,15 +1,6 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow strict-local
- */
-
 import React, {useState, useEffect, useRef} from 'react';
 import {
   View,
-  ScrollView,
   Text,
   StyleSheet,
   FlatList,
@@ -17,9 +8,10 @@ import {
 } from 'react-native';
 import {Colors} from './src/common/UIStylesCommon';
 import {DateDog} from './src/components/Date';
-import {Form} from './src/components/Form';
+import {Form} from './src/components/Form/Form';
 
 const App = () => {
+  //#region States
   const [showForm, setShowForm] = useState(false);
   const [dates, setDates] = useState([
     {
@@ -44,18 +36,26 @@ const App = () => {
       symptoms: 'No siente la rodilla ',
     },
   ]);
+  //#endregion States
 
+  //#region Handlers
   const deleteDate = (id) => {
     const dateFiltered = dates.filter((date) => date.id !== id);
     setDates(dateFiltered);
   };
+  const handleAddDate = (newDate) => {
+    setDates([...dates, newDate]);
+  };
+  //#endregion Handlers
 
+  //#region Effects
   const refDates = useRef(dates); //ESTO ES UNA OPTIMIZACION Y BUENA PRACTICA... Este me permite no pasarle al objeto hijo la opcion de que no se muestre el mismo. Sino que el efecto se encargue de validar el state que seria el general, el de las citas.
   useEffect(() => {
     if (JSON.stringify(refDates.current) !== JSON.stringify(dates)) {
       setShowForm(false);
     }
   }, [dates]);
+  //#endregion Effects
   return (
     <>
       <View style={styles.container}>
@@ -72,7 +72,7 @@ const App = () => {
         </View>
         <View style={styles.content}>
           {showForm ? (
-            <Form CurrentDates={dates} AddDate={setDates} />
+            <Form AddDate={handleAddDate} />
           ) : (
             <>
               <Text style={styles.headerApp}>
